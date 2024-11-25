@@ -14,16 +14,16 @@ public class BBSGenerator {
 
     private BigInteger generateInitialState() {
         SecureRandom random = new SecureRandom();
-        BigInteger seed;
+        BigInteger x;
         do {
-            seed = new BigInteger(n.bitLength(), random);
-        } while (seed.gcd(n).compareTo(BigInteger.ONE) != 0); // gcd(seed, n) == 1
-        return seed.modPow(BigInteger.TWO, n); // seed^2 mod n
+            x = new BigInteger(n.bitLength(), random);
+        } while (x.gcd(n).compareTo(BigInteger.ONE) != 0); // gcd(x, n) == 1
+        return x.modPow(BigInteger.TWO, n); // x^2 mod n
     }
 
     public int nextBit() {
         state = state.modPow(BigInteger.TWO, n);
-        return state.testBit(0) ? 1 : 0;
+        return state.mod(BigInteger.TWO).intValue();
     }
 
     public String generateBitString(int length) {
@@ -35,14 +35,15 @@ public class BBSGenerator {
     }
 
     public static void main(String[] args) {
-        BigInteger p = new BigInteger("9725");
-        BigInteger q = new BigInteger("10275");
+        BigInteger p = new BigInteger("10007");
+        BigInteger q = new BigInteger("10039");
 
         int numBits = 20000;
 
         BBSGenerator bbs = new BBSGenerator(p, q);
         String randomBits = bbs.generateBitString(numBits);
 
+        System.out.println("Dwie duże liczby pierwsze p i q, które są kongruentne z 3 modulo 4: " + p + ", " + q);
         System.out.println("Wygenerowany ciąg: " + randomBits);
 
         new BBSTests(randomBits).runAllTests();

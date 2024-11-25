@@ -69,8 +69,11 @@ public class BBSTests {
     }
 
     public void runAllTests() {
+        System.out.println("");
+
         float singleBit = countSingleBit();
-        System.out.println("Ilość wystąpień '1': " + singleBit);
+        String singleBitResult = singleBit > 9725 && singleBit < 10275 ? "zaliczony" : "niezaliczony";
+        System.out.println("Test pojedynczych bitów: " + singleBitResult + " [" + singleBit + "]" + " Powinno byc: 9725 < n(1) < 10275");
 
         Map<Integer, Integer> series = countSeriesOfBits();
         System.out.println("Test serii: ");
@@ -83,7 +86,7 @@ public class BBSTests {
 
         double pokerTestResult = runPokerTest();
         String pokerTestResultMessage = pokerTestResult > 2.16 && pokerTestResult < 46.17 ? "zaliczony" : "niezaliczony";
-        System.out.println("Test pokerowy: " + pokerTestResultMessage + " [x=" + pokerTestResult + "]");
+        System.out.println("Test pokerowy: " + pokerTestResultMessage + " [x=" + pokerTestResult + "] Powinno być: 2.16 < x < 46.17");
     }
 
 }
