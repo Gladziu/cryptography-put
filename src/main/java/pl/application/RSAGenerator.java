@@ -1,6 +1,7 @@
 package pl.application;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 
 public class RSAGenerator {
 
@@ -17,13 +18,11 @@ public class RSAGenerator {
     }
 
     private BigInteger generateE() {
-        BigInteger e = BigInteger.valueOf(2);
-        while (e.compareTo(phi) < 0) {
-            if (e.gcd(phi).equals(BigInteger.ONE)) {
-                break;
-            }
-            e = e.add(BigInteger.ONE);
-        }
+        SecureRandom random = new SecureRandom();
+        BigInteger e;
+        do {
+            e = new BigInteger(phi.bitLength(), random);
+        } while (e.gcd(phi).compareTo(BigInteger.ONE) != 0); // gcd(e, phi) == 1
         return e;
     }
 
@@ -36,9 +35,9 @@ public class RSAGenerator {
         BigInteger q = BigInteger.valueOf(59);
         RSAGenerator rsa = new RSAGenerator(p, q);
 
-        String message = "Da";
+        String message = "Czesc! To jest tajna informacja i nikt niechciany nie powinien jej zobaczyc!";
 
-        BigInteger encryptedValue = encryptMessage(rsa, message);
+        String encryptedValue = encryptMessage(rsa, message);
         String decrypteMessage = decryptMessage(rsa, encryptedValue);
 
         System.out.println("Infomracja jawna, oryginalna: " + message);
@@ -52,15 +51,28 @@ public class RSAGenerator {
         }
     }
 
-    private static BigInteger encryptMessage(RSAGenerator rsa, String message) {
-        return new BigInteger(1, message.getBytes())
-                .modPow(rsa.e, rsa.n)
-                ;
+    private static String encryptMessage(RSAGenerator rsa, String message) {
+        StringBuilder encryptedMessage = new StringBuilder();
+        for (int i = 0; i < message.length(); i++) {
+            char c = message.charAt(i);
+            BigInteger charValue = BigInteger.valueOf(c);
+            BigInteger encryptedChar = charValue.modPow(rsa.e, rsa.n);
+            encryptedMessage.append(encryptedChar).append(" ");
+        }
+        return encryptedMessage.toString();
     }
 
-    private static String decryptMessage(RSAGenerator rsa, BigInteger encryptedMessage) {
-        return new String(encryptedMessage
-                .modPow(rsa.d, rsa.n)
-                .toByteArray());
+    private static String decryptMessage(RSAGenerator rsa, String encryptedMessage) {
+        StringBuilder message = new StringBuilder();
+        String[] encryptedChars = encryptedMessage.split(" ");
+        for (String encryptedChar : encryptedChars) {
+            if (encryptedChar.isEmpty()) {
+                continue;
+            }
+            BigInteger encryptedValue = new BigInteger(encryptedChar);
+            BigInteger decryptedChar = encryptedValue.modPow(rsa.d, rsa.n);
+            message.append((char) decryptedChar.intValue());
+        }
+        return message.toString();
     }
 }
