@@ -2,15 +2,15 @@ package pl.application;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.Random;
 
 public class DHGenerator {
 
     public static void main(String[] args) {
+        // 1 < g < n
         SecureRandom random = new SecureRandom();
-
-        // 1. Uzgodnienie n (liczba pierwsza) i g (pierwiastek pierwotny modulo n)
-        BigInteger n = new BigInteger("23"); // Przykładowa liczba pierwsza
-        BigInteger g = new BigInteger("5");  // Przykładowy pierwiastek pierwotny
+        BigInteger n = generatePrimeN();
+        BigInteger g = generatePrimaryElement(n);
 
         System.out.println("Uzgodnione n: " + n + ", g: " + g);
 
@@ -42,5 +42,26 @@ public class DHGenerator {
         } else {
             System.out.println("Błąd w wymianie klucza.");
         }
+    }
+
+    private static BigInteger generatePrimeN() {
+        Random random = new SecureRandom();
+        int bitLength = 512;
+        BigInteger n;
+        BigInteger nTemp;
+        do{
+            n = new BigInteger(bitLength, 100, random);
+            nTemp = n.subtract(BigInteger.ONE).divide(BigInteger.TWO);
+        } while (!nTemp.isProbablePrime(100));
+        return n;
+    }
+
+    private static BigInteger generatePrimaryElement(BigInteger n) {
+        Random random = new SecureRandom();
+        BigInteger g;
+        do {
+            g = new BigInteger(n.bitLength() - 1, random);
+        } while (g.compareTo(BigInteger.ONE) <= 0 || g.compareTo(n) >= 0 || !g.gcd(n).equals(BigInteger.ONE));
+        return g;
     }
 }
