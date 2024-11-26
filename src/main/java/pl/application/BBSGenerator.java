@@ -17,13 +17,13 @@ public class BBSGenerator {
         BigInteger x;
         do {
             x = new BigInteger(n.bitLength(), random);
-        } while (x.gcd(n).compareTo(BigInteger.ONE) != 0); // gcd(x, n) == 1
+        } while (x.gcd(n).compareTo(BigInteger.ONE) != 0); // gcd(x, n) == 1, pierwiastek pierwotny
         return x.modPow(BigInteger.TWO, n); // x^2 mod n
     }
 
     public int nextBit() {
         state = state.modPow(BigInteger.TWO, n);
-        return state.mod(BigInteger.TWO).intValue();
+        return state.testBit(state.bitCount()) ? 1 : 0;
     }
 
     public String generateBitString(int length) {
@@ -35,6 +35,7 @@ public class BBSGenerator {
     }
 
     public static void main(String[] args) {
+        // p i q => mod 4 = 3
         BigInteger p = new BigInteger("10007");
         BigInteger q = new BigInteger("10039");
 

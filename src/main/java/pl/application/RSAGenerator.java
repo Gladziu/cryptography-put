@@ -18,6 +18,7 @@ public class RSAGenerator {
     }
 
     private BigInteger generateE() {
+        //e to pierwiastek pierwotny z phi
         SecureRandom random = new SecureRandom();
         BigInteger e;
         do {
