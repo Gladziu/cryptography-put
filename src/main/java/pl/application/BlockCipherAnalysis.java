@@ -35,27 +35,19 @@ public class BlockCipherAnalysis {
 
     public static void main(String[] args) throws Exception {
         SecretKey key = generateKey();
+        System.out.println("Pomiar czasu szyfrowania i deszyfrowania dla ECB, CBC, OFB, CFB, CTR:");
         for (int size : FILE_SIZES) {
             byte[] data = generateRandomData(size);
-            System.out.println("File size: " + size / 1024 / 1024 + " MB");
+            System.out.println("Rozmiar danych: " + size / 1024 / 1024 + " MB");
             for (String mode : MODES) {
-                System.out.print("Mode: " + mode + " | ");
+                System.out.print("Tryb: " + mode + " | ");
                 analyzeCipherMode(mode, key, data);
             }
         }
 
         analyzeErrorPropagation(key);
 
-        byte[] data = generateRandomData(64);
-        byte[] iv = generateIv(16); // 16 bajtów (128 bitów
-        Cipher ecbCipher = Cipher.getInstance(ALGORITHM + "/ECB/NoPadding");
-
-        byte[] customCBCEncryptResult = customCBCEncrypt(ecbCipher, data, key, iv);
-        byte[] bytes = customCBCDecrypt(ecbCipher, customCBCEncryptResult, key, iv);
-        System.out.println("Implementacja CBC za pomocą ECB");
-        System.out.println("Dane przed zaszyfrowaniem: " + Arrays.toString(data));
-        System.out.println("Dane po zaszyfrowaniu: " + Arrays.toString(customCBCEncryptResult));
-        System.out.println("Dane po odszyfrowaniu: " + Arrays.toString(bytes));
+        implementCBCWithECB(key);
     }
 
     private static void analyzeCipherMode(String mode, SecretKey key, byte[] data) throws Exception {
@@ -71,11 +63,12 @@ public class BlockCipherAnalysis {
         // Deszyfrowanie
         initializeDecription(cipher, key, ivSpec);
         long startDecrypt = System.currentTimeMillis();
-        byte[] decryptedData = cipher.doFinal(encryptedData);
+        cipher.doFinal(encryptedData);
         long decryptTime = System.currentTimeMillis() - startDecrypt;
 
-        System.out.print("Encryption time: " + encryptTime + " ms  | ");
-        System.out.println("Decryption time: " + decryptTime + " ms");
+        System.out.print("Czas szyfrowania: " + encryptTime + " ms  | ");
+        System.out.print("Czas deszyfroawania: " + decryptTime + " ms  | ");
+        System.out.println("Suma: " + (decryptTime + encryptTime) + " ms");
     }
 
     private static IvParameterSpec getIvSpec(String mode, Cipher cipher) {
@@ -84,9 +77,9 @@ public class BlockCipherAnalysis {
 
     private static void analyzeErrorPropagation(SecretKey key) throws Exception {
         byte[] data = generateRandomData(64);
-        System.out.println("\nDane przed szyfrowaniem:                       " + Arrays.toString(data));
+        System.out.println("\nAnaliza propagacji błędów:");
+        System.out.println("Dane przed zaszyfrowaniem: " + Arrays.toString(data));
         for (String mode : MODES) {
-            System.out.println("Propagacja błędów w trybie: " + mode);
 
             Cipher cipher = getCipher(mode);
             IvParameterSpec ivSpec = getIvSpec(mode, cipher);
@@ -94,13 +87,13 @@ public class BlockCipherAnalysis {
             initializeEncryption(cipher, key, ivSpec);
             byte[] encryptedData = cipher.doFinal(data);
 
-            // Wprowadzenie błędu w szyfrogramie - XOR na 10 bicie
-            encryptedData[10] ^= 1;
+            // Wprowadzenie błędu w szyfrogramie - negacja 10 bitu
+            encryptedData[10] = (byte) ~encryptedData[10];
 
             try {
                 initializeDecription(cipher, key, ivSpec);
                 byte[] decryptedData = cipher.doFinal(encryptedData);
-                System.out.println("Deszyfrowane dane (przy wprowadzeniu błędu): " + Arrays.toString(decryptedData));
+                System.out.println("Tryb: " + mode + ". Dane po odszyfrowaniu: " + Arrays.toString(decryptedData));
             } catch (Exception e) {
                 System.out.println("Błąd deszyfrowania: " + e.getMessage());
             }
@@ -147,6 +140,19 @@ public class BlockCipherAnalysis {
         byte[] data = new byte[size];
         new SecureRandom().nextBytes(data);
         return data;
+    }
+
+    private static void implementCBCWithECB(SecretKey key) throws Exception {
+        byte[] data = generateRandomData(64);
+        byte[] iv = generateIv(16); // 16 bajtów (128 bitów)
+        Cipher ecbCipher = Cipher.getInstance(ALGORITHM + "/ECB/NoPadding");
+
+        byte[] customCBCEncryptResult = customCBCEncrypt(ecbCipher, data, key, iv);
+        byte[] bytes = customCBCDecrypt(ecbCipher, customCBCEncryptResult, key, iv);
+        System.out.println("\nImplementacja CBC za pomocą ECB");
+        System.out.println("Dane przed zaszyfrowaniem: " + Arrays.toString(data));
+        System.out.println("Dane po zaszyfrowaniu: " + Arrays.toString(customCBCEncryptResult));
+        System.out.println("Dane po odszyfrowaniu: " + Arrays.toString(bytes));
     }
 
     // Implementacja trybu CBC za pomocą ECB
